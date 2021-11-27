@@ -42,7 +42,7 @@ docker run -d --name ${service} \
 
 ## Early Access
 ```shell
-docker build --file "satisfactory.Dockerfile" --tag "satisfactory:latest --build-arg EXPERIMENTAL=false .
+docker build --file "build.Dockerfile" --tag "satisfactory:latest --build-arg EXPERIMENTAL=false .
 docker image tag satisfactory:latest pacificengine/satisfactory:latest
 docker image tag satisfactory:latest pacificengine/satisfactory:ubuntu-20-latest
 docker image tag satisfactory:latest pacificengine/satisfactory:early-access
@@ -55,7 +55,7 @@ docker push pacificengine/satisfactory:ubuntu-20-early-access
 
 ## Experimental
 ```shell
-docker build --file "satisfactory.Dockerfile" --tag "satisfactory:experimental" --build-arg EXPERIMENTAL=true .
+docker build --file "build.Dockerfile" --tag "satisfactory:experimental" --build-arg EXPERIMENTAL=true .
 docker image tag satisfactory:latest pacificengine/satisfactory:experimental
 docker image tag satisfactory:latest pacificengine/satisfactory:ubuntu-20-experimental
 docker push pacificengine/satisfactory:experimental
