@@ -56,8 +56,8 @@ docker push pacificengine/satisfactory:ubuntu-20-early-access
 ## Experimental
 ```shell
 docker build --file "build.Dockerfile" --tag "satisfactory:experimental" --build-arg EXPERIMENTAL=true .
-docker image tag satisfactory:latest pacificengine/satisfactory:experimental
-docker image tag satisfactory:latest pacificengine/satisfactory:ubuntu-20-experimental
+docker image tag satisfactory:experimental pacificengine/satisfactory:experimental
+docker image tag satisfactory:experimental pacificengine/satisfactory:ubuntu-20-experimental
 docker push pacificengine/satisfactory:experimental
 docker push pacificengine/satisfactory:ubuntu-20-experimental
 ```
