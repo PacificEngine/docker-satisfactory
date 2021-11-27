@@ -5,7 +5,7 @@ https://hub.docker.com/r/pacificengine/satisfactory
 
 ## Early Access
 ```shell
-docker build --file "satisfactory.Dockerfile" --tag satisfactory:latest --build-arg EXPERIMENTAL=false .
+docker build --file "satisfactory.Dockerfile" --tag "satisfactory:latest --build-arg EXPERIMENTAL=false .
 docker image tag satisfactory:latest pacificengine/satisfactory:latest
 docker image tag satisfactory:latest pacificengine/satisfactory:ubuntu-20-latest
 docker image tag satisfactory:latest pacificengine/satisfactory:early-access
