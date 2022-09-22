@@ -15,7 +15,7 @@ UPDATE_SCRIPT="${INSTALL_DIRECTORY}/update.script"
 START_SCRIPT="${INSTALL_DIRECTORY}/FactoryServer.sh"
 
 runCommandAsLocalUser() {
-  su --login "${USERNAME}" --shell /bin/bash --command ${@}
+  su --login "${USERNAME}" --shell /bin/bash --command "${@}"
 }
 
 log() {
@@ -26,7 +26,7 @@ getServerProcessId() {
   local id="$(cat "${PROCESS_ID_FILE}")"
   if [[ -z "${id}" || -z "$(ps --pid ${id} --no-headers)" ]]; then
     id=$(getProcess '' '\sFactoryGame\s')
-    echo "${id}" > "${PROCESS_ID_FILE}"
+    runCommandAsLocalUser "echo '${id}' > '${PROCESS_ID_FILE}'"
   fi
   echo "${id}"
 }
@@ -113,13 +113,13 @@ startServer() {
 
   echo "STARTING" > "${PROCESS_STATUS_FILE}"
 
-  trap "{ log 'Quit Signal Received' ; stopServer ; }" SIGQUIT
-  trap "{ log 'Abort Signal Received' ; stopServer ; }" SIGABRT
-  trap "{ log 'Interrupt Signal Received' ; stopServer ; }" SIGINT
-  trap "{ log 'Terminate Signal Received' ; stopServer ; }" SIGTERM
+  trap "{ echo 'Quit Signal Received' ; /build/stop.sh ; }" SIGQUIT
+  trap "{ echo 'Abort Signal Received' ; /build/stop.sh ; }" SIGABRT
+  trap "{ echo 'Interrupt Signal Received' ; /build/stop.sh ; }" SIGINT
+  trap "{ echo 'Terminate Signal Received' ; /build/stop.sh ; }" SIGTERM
 
-  createLogFiles
   updateUser
+  createLogFiles
   if [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTING" ]]; then
     updateServer
   fi
@@ -127,10 +127,15 @@ startServer() {
   if [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTING" ]]; then
     log "Booting Server"
     runCommandAsLocalUser "tail --follow=name --retry --lines=0 '${INPUT_FILE}' | '${START_SCRIPT}' -ServerQueryPort=${PORT_SERVER_QUERY} -BeaconPort=${PORT_BEACON} -Port=${PORT_SERVER} -log -unattended" &
-    sleep 1
-    if [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTING" ]]; then
+    while [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTING" ]]; do
+      id="$(getServerProcessId)"
+      if [[ -n "${id}" ]]; then
+        break
+      fi
+    done
+    if [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTING" && -n "${id}" ]]; then
       echo "STARTED" > "${PROCESS_STATUS_FILE}"
-      tail --pid=$(cat "$(getServerProcessId)") --follow=descriptor /dev/null
+      tail --pid=$(getServerProcessId) --follow=descriptor /dev/null
     else
       stopServer
     fi
