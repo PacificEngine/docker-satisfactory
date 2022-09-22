@@ -13,7 +13,6 @@ PROCESS_ID_FILE="${INSTALL_DIRECTORY}/process.id"
 PROCESS_STATUS_FILE="${INSTALL_DIRECTORY}/process.status"
 UPDATE_SCRIPT="${INSTALL_DIRECTORY}/update.script"
 START_SCRIPT="${INSTALL_DIRECTORY}/FactoryServer.sh"
-SERVER_SCRIPT="${INSTALL_DIRECTORY}/Engine/Binaries/Linux/UE4Server-Linux-Shipping"
 
 log() {
   su --login "${USERNAME}" --shell /bin/bash --command "echo '[$(date "${LOG_DATE_FORMAT}")] ${1}' >> '${SIMPLE_LOG_FILE}'"
@@ -22,10 +21,8 @@ log() {
 getServerProcessId() {
   local id="$(cat "${PROCESS_ID_FILE}")"
   if [[ -z "${id}" || -z "$(ps --pid ${id} --no-headers)" ]]; then
-    id=$(getProcess "${SERVER_SCRIPT}" 'FactoryGame')
-    if [[ -n "${id}" ]]; then
-      echo "${id}" > "${PROCESS_ID_FILE}"
-    fi
+    id=$(getProcess '' '\sFactoryGame\s')
+    echo "${id}" > "${PROCESS_ID_FILE}"
   fi
   echo "${id}"
 }
@@ -74,7 +71,7 @@ stopServer() {
   local waitTime=0;
   local maximumWaitTime=30
 
-  echo "STOP" > "${PROCESS_STATUS_FILE}"
+  echo "STOPPING" > "${PROCESS_STATUS_FILE}"
 
   id="$(getServerProcessId)"
   if [[ -n "${id}" ]]; then
@@ -103,15 +100,14 @@ stopServer() {
 
     tail --pid=${id} --follow=descriptor /dev/null
   else
-    id="$(getProcess 'steamcmd' "${UPDATE_SCRIPT}")"
-    killProcess "${id}"
+    killProcess "$(getProcess 'steamcmd' "${UPDATE_SCRIPT}")"
   fi
 }
 
 startServer() {
   local id=""
 
-  echo "STARTED" > "${PROCESS_STATUS_FILE}"
+  echo "STARTING" > "${PROCESS_STATUS_FILE}"
 
   trap "{ log 'Quit Signal Received' ; stopServer ; }" SIGQUIT
   trap "{ log 'Abort Signal Received' ; stopServer ; }" SIGABRT
@@ -120,21 +116,22 @@ startServer() {
 
   createLogFiles
   updateUser
-  if [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTED" ]]; then
+  if [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTING" ]]; then
     updateServer
   fi
 
-  if [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTED" ]]; then
+  if [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTING" ]]; then
     log "Booting Server"
     su --login "${USERNAME}" --shell /bin/bash --command "tail --follow=name --retry --lines=0 '${INPUT_FILE}' | '${START_SCRIPT}' -ServerQueryPort=${PORT_SERVER_QUERY} -BeaconPort=${PORT_BEACON} -Port=${PORT_SERVER} -log -unattended" &
-    sleep 10
-    if [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTED" ]]; then
+    if [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTING" ]]; then
+      echo "STARTED" > "${PROCESS_STATUS_FILE}"
       tail --pid=$(cat "$(getServerProcessId)") --follow=descriptor /dev/null
     else
       stopServer
     fi
   fi
   log "Server Shutdown"
+  echo "STOPPED" > "${PROCESS_STATUS_FILE}"
 
   saveLogFiles
 
