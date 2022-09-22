@@ -22,7 +22,7 @@ getServerProcessId() {
   if [[ -z "${id}" || -z "$(ps --pid ${id} --no-headers)" ]]; then
     id=getProcess "${SERVER_SCRIPT}" 'FactoryGame'
     if [[ -n "${id}" ]]; then
-      echo "${id}" > > "${PROCESS_ID_FILE}"
+      echo "${id}" > "${PROCESS_ID_FILE}"
     fi
   fi
   echo "${id}"
