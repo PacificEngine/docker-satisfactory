@@ -10,6 +10,7 @@ UPDATE_LOG_FILE="${LOG_DIRECTORY}/update.log"
 SIMPLE_LOG_FILE="${LOG_DIRECTORY}/simple.log"
 MAIN_LOG_FILE="${LOG_DIRECTORY}/FactoryGame.log"
 PROCESS_ID_FILE="${INSTALL_DIRECTORY}/process.id"
+PROCESS_STATUS_FILE="${INSTALL_DIRECTORY}/process.status"
 UPDATE_SCRIPT="${INSTALL_DIRECTORY}/update.script"
 START_SCRIPT="${INSTALL_DIRECTORY}/FactoryServer.sh"
 SERVER_SCRIPT="${INSTALL_DIRECTORY}/Engine/Binaries/Linux/UE4Server-Linux-Shipping"
@@ -69,10 +70,13 @@ updateServer() {
 }
 
 stopServer() {
-  local id="$(getServerProcessId)"
+  local id=''
   local waitTime=0;
   local maximumWaitTime=30
 
+  echo "STOP" > "${PROCESS_STATUS_FILE}"
+
+  id="$(getServerProcessId)"
   if [[ -n "${id}" ]]; then
     log "Server Shutting Down"
     stopProcess "${id}"
@@ -98,27 +102,38 @@ stopServer() {
     killProcess "$(getProcess "${START_SCRIPT}")"
 
     tail --pid=${id} --follow=descriptor /dev/null
+  else
+    id="$(getProcess 'steamcmd' "${UPDATE_SCRIPT}")"
+    killProcess "${id}"
   fi
-
-  killProcess "$(getProcess 'steamcmd' "${UPDATE_SCRIPT}")"
 }
 
 startServer() {
   local id=""
 
+  echo "STARTED" > "${PROCESS_STATUS_FILE}"
+
+  trap "{ log 'Quit Signal Received' ; stopServer ; }" SIGQUIT
+  trap "{ log 'Abort Signal Received' ; stopServer ; }" SIGABRT
+  trap "{ log 'Interrupt Signal Received' ; stopServer ; }" SIGINT
+  trap "{ log 'Terminate Signal Received' ; stopServer ; }" SIGTERM
+
   createLogFiles
   updateUser
-  updateServer
+  if [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTED" ]]; then
+    updateServer
+  fi
 
-  trap "{ echo 'Quit Signal Received' ; /build/stop.sh ; }" SIGQUIT
-  trap "{ echo 'Abort Signal Received' ; /build/stop.sh ; }" SIGABRT
-  trap "{ echo 'Interrupt Signal Received' ; /build/stop.sh ; }" SIGINT
-  trap "{ echo 'Terminate Signal Received' ; /build/stop.sh ; }" SIGTERM
-
-  log "Booting Server"
-  su --login "${USERNAME}" --shell /bin/bash --command "tail --follow=name --retry --lines=0 '${INPUT_FILE}' | '${START_SCRIPT}' -ServerQueryPort=${PORT_SERVER_QUERY} -BeaconPort=${PORT_BEACON} -Port=${PORT_SERVER} -log -unattended" &
-  sleep 10
-  tail --pid=$(cat "$(getServerProcessId)") --follow=descriptor /dev/null
+  if [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTED" ]]; then
+    log "Booting Server"
+    su --login "${USERNAME}" --shell /bin/bash --command "tail --follow=name --retry --lines=0 '${INPUT_FILE}' | '${START_SCRIPT}' -ServerQueryPort=${PORT_SERVER_QUERY} -BeaconPort=${PORT_BEACON} -Port=${PORT_SERVER} -log -unattended" &
+    sleep 10
+    if [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTED" ]]; then
+      tail --pid=$(cat "$(getServerProcessId)") --follow=descriptor /dev/null
+    else
+      stopServer
+    fi
+  fi
   log "Server Shutdown"
 
   saveLogFiles
