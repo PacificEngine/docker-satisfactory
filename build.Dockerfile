@@ -10,7 +10,6 @@ ARG INSTALL_DIRECTORY='/home/satisfactory'
 ARG LOG_DIRECTORY="${INSTALL_DIRECTORY}/FactoryGame/Saved/Logs"
 ARG USERNAME='satisfactory'
 ARG USERGROUP='satisfactory'
-
 RUN mkdir --parents ${LOG_DIRECTORY} && \
 	mkdir --parents ${INSTALL_DIRECTORY} && \
 	groupadd ${USERGROUP} && \
@@ -23,7 +22,6 @@ RUN mkdir --parents ${LOG_DIRECTORY} && \
 ARG GAME_ID='1690800'
 ARG EXPERIMENTAL='false'
 ARG EXPERIMENTAL_ARGS='-beta experimental'
-
 COPY install ${INSTALL_DIRECTORY}
 RUN cat "${INSTALL_DIRECTORY}/update.script.template" \
         | sed --regexp-extended "s/<%INSTALL_DIRECTORY%>/${INSTALL_DIRECTORY//\//\\/}/g" \
@@ -45,7 +43,7 @@ ARG PORT_BEACON=''
 ARG PORT_SERVER=''
 ARG AUTO_UPDATE=''
 COPY docker /
-RUN cat '/build/start.sh.template' \
+RUN cat '/build/properties.sh.template' \
         | sed --regexp-extended "s/<%INSTALL_DIRECTORY%>/${INSTALL_DIRECTORY//\//\\/}/g" \
         | sed --regexp-extended "s/<%LOG_DIRECTORY%>/${LOG_DIRECTORY//\//\\/}/g" \
         | sed --regexp-extended "s/<%USERNAME%>/${USERNAME//\//\\/}/g" \
@@ -57,8 +55,8 @@ RUN cat '/build/start.sh.template' \
         | sed --regexp-extended "s/<%PORT_BEACON%>/${PORT_BEACON:-15000}/g" \
         | sed --regexp-extended "s/<%PORT_SERVER%>/${PORT_SERVER:-7777}/g" \
         | sed --regexp-extended "s/<%AUTO_UPDATE%>/${AUTO_UPDATE:-true}/g" \
-        > '/build/start.sh' && \
-    rm '/build/start.sh.template' && \
-	chmod 555 '/build/start.sh'
+        > '/build/properties.sh' && \
+    rm '/build/properties.sh.template' && \
+	chmod 555 /build/*.sh
 
 ENTRYPOINT ["/bin/bash", "/build/start.sh"]
