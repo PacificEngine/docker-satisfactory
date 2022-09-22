@@ -25,7 +25,7 @@ ARG EXPERIMENTAL='false'
 ARG EXPERIMENTAL_ARGS='-beta experimental'
 
 COPY install ${INSTALL_DIRECTORY}
-RUN cat "${INSTALL_DIRECTORY}/update.script.template" | \
+RUN cat "${INSTALL_DIRECTORY}/update.script.template" \
         | sed --regexp-extended "s/<%INSTALL_DIRECTORY%>/${INSTALL_DIRECTORY//\//\\/}/g" \
         | sed --regexp-extended "s/<%LOG_DIRECTORY%>/${LOG_DIRECTORY//\//\\/}/g" \
         | sed --regexp-extended "s/<%USERNAME%>/${USERNAME//\//\\/}/g" \
@@ -45,7 +45,7 @@ ARG PORT_BEACON=''
 ARG PORT_SERVER=''
 ARG AUTO_UPDATE=''
 COPY docker /
-RUN cat '/build/start.sh.template' | \
+RUN cat '/build/start.sh.template' \
         | sed --regexp-extended "s/<%INSTALL_DIRECTORY%>/${INSTALL_DIRECTORY//\//\\/}/g" \
         | sed --regexp-extended "s/<%LOG_DIRECTORY%>/${LOG_DIRECTORY//\//\\/}/g" \
         | sed --regexp-extended "s/<%USERNAME%>/${USERNAME//\//\\/}/g" \
