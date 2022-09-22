@@ -21,7 +21,7 @@ log() {
 getServerProcessId() {
   local id="$(cat "${PROCESS_ID_FILE}")"
   if [[ -z "${id}" || -z "$(ps --pid ${id} --no-headers)" ]]; then
-    id=getProcess "${SERVER_SCRIPT}" 'FactoryGame'
+    id=$(getProcess "${SERVER_SCRIPT}" 'FactoryGame')
     if [[ -n "${id}" ]]; then
       echo "${id}" > "${PROCESS_ID_FILE}"
     fi
@@ -99,6 +99,8 @@ stopServer() {
 
     tail --pid=${id} --follow=descriptor /dev/null
   fi
+
+  killProcess "$(getProcess 'steamcmd' "${UPDATE_SCRIPT}")"
 }
 
 startServer() {
@@ -115,6 +117,7 @@ startServer() {
 
   log "Booting Server"
   su --login "${USERNAME}" --shell /bin/bash --command "tail --follow=name --retry --lines=0 '${INPUT_FILE}' | '${START_SCRIPT}' -ServerQueryPort=${PORT_SERVER_QUERY} -BeaconPort=${PORT_BEACON} -Port=${PORT_SERVER} -log -unattended" &
+  sleep 10
   tail --pid=$(cat "$(getServerProcessId)") --follow=descriptor /dev/null
   log "Server Shutdown"
 
