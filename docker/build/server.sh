@@ -14,8 +14,12 @@ PROCESS_STATUS_FILE="${INSTALL_DIRECTORY}/process.status"
 UPDATE_SCRIPT="${INSTALL_DIRECTORY}/update.script"
 START_SCRIPT="${INSTALL_DIRECTORY}/FactoryServer.sh"
 
+runCommandAsLocalUser() {
+  su --login "${USERNAME}" --shell /bin/bash --command ${@}
+}
+
 log() {
-  su --login "${USERNAME}" --shell /bin/bash --command "echo '[$(date "${LOG_DATE_FORMAT}")] ${1}' >> '${SIMPLE_LOG_FILE}'"
+  runCommandAsLocalUser "echo '[$(date "${LOG_DATE_FORMAT}")] ${1}' >> '${SIMPLE_LOG_FILE}'"
 }
 
 getServerProcessId() {
@@ -29,21 +33,21 @@ getServerProcessId() {
 
 saveLogFiles() {
   if [[ -f "${INPUT_FILE}" ]]; then
-    mv "${INPUT_FILE}" "${LOG_DIRECTORY}/$(head --lines=1 "${INPUT_FILE}")"
+    runCommandAsLocalUser "mv '${INPUT_FILE}' '${LOG_DIRECTORY}/$(head --lines=1 "${INPUT_FILE}")'"
   fi
   if [[ -f "${UPDATE_LOG_FILE}" ]]; then
-    mv "${UPDATE_LOG_FILE}" "${LOG_DIRECTORY}/$(head --lines=1 "${UPDATE_LOG_FILE}")"
+    runCommandAsLocalUser "mv '${UPDATE_LOG_FILE}' '${LOG_DIRECTORY}/$(head --lines=1 "${UPDATE_LOG_FILE}")'"
   fi
   if [[ -f "${SIMPLE_LOG_FILE}" ]]; then
-    mv "${SIMPLE_LOG_FILE}" "${LOG_DIRECTORY}/$(head --lines=1 "${SIMPLE_LOG_FILE}")"
+    runCommandAsLocalUser "mv '${SIMPLE_LOG_FILE}' '${LOG_DIRECTORY}/$(head --lines=1 "${SIMPLE_LOG_FILE}")'"
   fi
 }
 
 createLogFiles() {
   saveLogFiles
-  echo "input.${DATE}.log" > "${INPUT_FILE}"
-  echo "update.${DATE}.log" > "${UPDATE_LOG_FILE}"
-  echo "simple.${DATE}.log" > "${SIMPLE_LOG_FILE}"
+  runCommandAsLocalUser "echo 'input.${DATE}.log' > '${INPUT_FILE}'"
+  runCommandAsLocalUser "echo 'update.${DATE}.log' > '${UPDATE_LOG_FILE}'"
+  runCommandAsLocalUser "echo 'simple.${DATE}.log' > '${SIMPLE_LOG_FILE}'"
 }
 
 updateUser() {
@@ -62,7 +66,7 @@ updateServer() {
   if [[ "${AUTO_UPDATE}" == "true" ]]; then
     chmod 777 -R /tmp
     log "Updating Server"
-    su --login "${USERNAME}" --shell /bin/bash --command "steamcmd +runscript '${UPDATE_SCRIPT}' >> '${UPDATE_LOG_FILE}'"
+    runCommandAsLocalUser "steamcmd +runscript '${UPDATE_SCRIPT}' >> '${UPDATE_LOG_FILE}'"
   fi
 }
 
@@ -122,7 +126,8 @@ startServer() {
 
   if [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTING" ]]; then
     log "Booting Server"
-    su --login "${USERNAME}" --shell /bin/bash --command "tail --follow=name --retry --lines=0 '${INPUT_FILE}' | '${START_SCRIPT}' -ServerQueryPort=${PORT_SERVER_QUERY} -BeaconPort=${PORT_BEACON} -Port=${PORT_SERVER} -log -unattended" &
+    runCommandAsLocalUser "tail --follow=name --retry --lines=0 '${INPUT_FILE}' | '${START_SCRIPT}' -ServerQueryPort=${PORT_SERVER_QUERY} -BeaconPort=${PORT_BEACON} -Port=${PORT_SERVER} -log -unattended" &
+    sleep 1
     if [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTING" ]]; then
       echo "STARTED" > "${PROCESS_STATUS_FILE}"
       tail --pid=$(cat "$(getServerProcessId)") --follow=descriptor /dev/null
