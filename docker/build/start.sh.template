@@ -1,0 +1,71 @@
+#!/bin/bash
+
+INSTALL_DIRECTORY='<%INSTALL_DIRECTORY%>'
+LOG_DIRECTORY='<%LOG_DIRECTORY%>'
+USERNAME='<%USERNAME%>'
+USERGROUP='<%USERGROUP%>'
+GAME_ID='<%GAME_ID%>'
+EXPERIMENTAL='<%EXPERIMENTAL%>'
+
+PORT_SERVER_QUERY="${PORT_SERVER_QUERY:-<%PORT_SERVER_QUERY%>}"
+PORT_BEACON="${PORT_BEACON:-<%PORT_BEACON%>}"
+PORT_SERVER="${PORT_SERVER:-<%PORT_SERVER%>}"
+AUTO_UPDATE="${AUTO_UPDATE:-<%AUTO_UPDATE%>}"
+
+DATE="$(date "+%F-%H:%M:%S")"
+LOG_DATE_FORMAT="+%FT%H:%M:%S"
+INPUT_FILE="${LOG_DIRECTORY}/input.log"
+UPDATE_FILE="${LOG_DIRECTORY}/update.log"
+LOG_FILE="${LOG_DIRECTORY}/simple.log"
+UPDATE_SCRIPT="${INSTALL_DIRECTORY}/update.script"
+START_SCRIPT="${INSTALL_DIRECTORY}/FactoryServer.sh"
+
+log() {
+  su --login "${USERNAME}" --shell /bin/bash --command "echo '[$(date "${LOG_DATE_FORMAT}")] ${1}' >> '${LOG_FILE}'"
+}
+
+createLogFiles() {
+  if [[ -f "${INPUT_FILE}" ]]; then
+    mv "${INPUT_FILE}" "${LOG_DIRECTORY}/$(head --lines=1 "${INPUT_FILE}")"
+  fi
+  if [[ -f "${UPDATE_FILE}" ]]; then
+    mv "${UPDATE_FILE}" "${LOG_DIRECTORY}/$(head --lines=1 "${UPDATE_FILE}")"
+  fi
+  if [[ -f "${LOG_FILE}" ]]; then
+    mv "${LOG_FILE}" "${LOG_DIRECTORY}/$(head --lines=1 "${LOG_FILE}")"
+  fi
+  echo "input.${DATE}.log" > "${INPUT_FILE}"
+  echo "update.${DATE}.log" > "${UPDATE_FILE}"
+  echo "simple.${DATE}.log" > "${LOG_FILE}"
+}
+
+updateUser() {
+  if [[ -n "${PUID}" ]]; then
+    usermod -u "${PUID}" "${USERNAME}"
+  fi
+  if [[ -n "${PGID}" ]]; then
+    groupmod -g "${PGID}" "${USERGROUP}"
+  fi
+  chown "${USERNAME}":"${USERGROUP}" -R "${INSTALL_DIRECTORY}"
+  chown "${USERNAME}":"${USERGROUP}" "${LOG_DIRECTORY}"
+}
+
+updateServer() {
+  cd "${INSTALL_DIRECTORY}"
+  if [[ "${AUTO_UPDATE}" == "true" ]]; then
+    chmod 777 -R /tmp
+    log "Updating Server"
+    su --login "${USERNAME}" --shell /bin/bash --command "steamcmd +runscript '${UPDATE_SCRIPT}' >> '${UPDATE_FILE}'"
+  fi
+}
+
+startServer() {
+  log "Booting Server"
+  su --login "${USERNAME}" --shell /bin/bash --command "tail --follow=name --retry --lines=0 '${INPUT_FILE}' | '${START_SCRIPT}' -ServerQueryPort=${PORT_SERVER_QUERY} -BeaconPort=${PORT_BEACON} -Port=${PORT_SERVER} -log -unattended"
+  log "Server Shutdown"
+}
+
+createLogFiles
+updateUser
+updateServer
+startServer

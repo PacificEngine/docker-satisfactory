@@ -1,0 +1,7 @@
+@ShutdownOnFailedCommand 1
+@NoPromptForPassword 1
+@sSteamCmdForcePlatformType linux
+force_install_dir <%INSTALL_DIRECTORY%>
+login anonymous
+app_update <%GAME_ID%> <%UPDATE_ARGUMENTS%> validate
+quit
