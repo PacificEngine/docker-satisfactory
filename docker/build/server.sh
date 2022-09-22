@@ -6,15 +6,16 @@ source /build/properties.sh
 DATE="$(date "+%F-%H:%M:%S")"
 LOG_DATE_FORMAT="+%FT%H:%M:%S"
 INPUT_FILE="${LOG_DIRECTORY}/input.log"
-UPDATE_FILE="${LOG_DIRECTORY}/update.log"
-LOG_FILE="${LOG_DIRECTORY}/simple.log"
+UPDATE_LOG_FILE="${LOG_DIRECTORY}/update.log"
+SIMPLE_LOG_FILE="${LOG_DIRECTORY}/simple.log"
+MAIN_LOG_FILE="${LOG_DIRECTORY}/FactoryGame.log"
 PROCESS_ID_FILE="${INSTALL_DIRECTORY}/process.id"
 UPDATE_SCRIPT="${INSTALL_DIRECTORY}/update.script"
 START_SCRIPT="${INSTALL_DIRECTORY}/FactoryServer.sh"
 SERVER_SCRIPT="${INSTALL_DIRECTORY}/Engine/Binaries/Linux/UE4Server-Linux-Shipping"
 
 log() {
-  su --login "${USERNAME}" --shell /bin/bash --command "echo '[$(date "${LOG_DATE_FORMAT}")] ${1}' >> '${LOG_FILE}'"
+  su --login "${USERNAME}" --shell /bin/bash --command "echo '[$(date "${LOG_DATE_FORMAT}")] ${1}' >> '${SIMPLE_LOG_FILE}'"
 }
 
 getServerProcessId() {
@@ -32,19 +33,19 @@ saveLogFiles() {
   if [[ -f "${INPUT_FILE}" ]]; then
     mv "${INPUT_FILE}" "${LOG_DIRECTORY}/$(head --lines=1 "${INPUT_FILE}")"
   fi
-  if [[ -f "${UPDATE_FILE}" ]]; then
-    mv "${UPDATE_FILE}" "${LOG_DIRECTORY}/$(head --lines=1 "${UPDATE_FILE}")"
+  if [[ -f "${UPDATE_LOG_FILE}" ]]; then
+    mv "${UPDATE_LOG_FILE}" "${LOG_DIRECTORY}/$(head --lines=1 "${UPDATE_LOG_FILE}")"
   fi
-  if [[ -f "${LOG_FILE}" ]]; then
-    mv "${LOG_FILE}" "${LOG_DIRECTORY}/$(head --lines=1 "${LOG_FILE}")"
+  if [[ -f "${SIMPLE_LOG_FILE}" ]]; then
+    mv "${SIMPLE_LOG_FILE}" "${LOG_DIRECTORY}/$(head --lines=1 "${SIMPLE_LOG_FILE}")"
   fi
 }
 
 createLogFiles() {
   saveLogFiles
   echo "input.${DATE}.log" > "${INPUT_FILE}"
-  echo "update.${DATE}.log" > "${UPDATE_FILE}"
-  echo "simple.${DATE}.log" > "${LOG_FILE}"
+  echo "update.${DATE}.log" > "${UPDATE_LOG_FILE}"
+  echo "simple.${DATE}.log" > "${SIMPLE_LOG_FILE}"
 }
 
 updateUser() {
@@ -63,7 +64,7 @@ updateServer() {
   if [[ "${AUTO_UPDATE}" == "true" ]]; then
     chmod 777 -R /tmp
     log "Updating Server"
-    su --login "${USERNAME}" --shell /bin/bash --command "steamcmd +runscript '${UPDATE_SCRIPT}' >> '${UPDATE_FILE}'"
+    su --login "${USERNAME}" --shell /bin/bash --command "steamcmd +runscript '${UPDATE_SCRIPT}' >> '${UPDATE_LOG_FILE}'"
   fi
 }
 
@@ -93,6 +94,7 @@ stopServer() {
     fi
 
     killProcess "$(getProcess 'tail' "${INPUT_FILE}")"
+    killProcess "$(getProcess 'tail' "${MAIN_LOG_FILE}")"
     killProcess "$(getProcess "${START_SCRIPT}")"
 
     tail --pid=${id} --follow=descriptor /dev/null
@@ -106,10 +108,11 @@ startServer() {
   updateUser
   updateServer
 
-  trap "{ echo 'Quit Signal Received, Stopping the service' ; stopServer ; }" SIGQUIT
-  trap "{ echo 'Abort Signal Received, Stopping the service' ; stopServer ; }" SIGABRT
-  trap "{ echo 'Interrupt Signal Received, Stopping the service' ; stopServer ; }" SIGINT
-  trap "{ echo 'Terminate Signal Received, Stopping the service' ; stopServer ; }" SIGTERM
+  trap "{ echo 'Quit Signal Received' ; /build/stop.sh ; }" SIGQUIT
+  trap "{ echo 'Abort Signal Received' ; /build/stop.sh ; }" SIGABRT
+  trap "{ echo 'Interrupt Signal Received' ; /build/stop.sh ; }" SIGINT
+  trap "{ echo 'Terminate Signal Received' ; /build/stop.sh ; }" SIGTERM
+  trap "{ echo 'Exit Signal Received' ; /build/stop.sh ; }" EXIT
 
   log "Booting Server"
   su --login "${USERNAME}" --shell /bin/bash --command "tail --follow=name --retry --lines=0 '${INPUT_FILE}' | '${START_SCRIPT}' -ServerQueryPort=${PORT_SERVER_QUERY} -BeaconPort=${PORT_BEACON} -Port=${PORT_SERVER} -log -unattended" &
