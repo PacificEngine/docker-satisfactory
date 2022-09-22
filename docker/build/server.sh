@@ -67,16 +67,6 @@ updateServer() {
   fi
 }
 
-startServer() {
-  local id=""
-
-  log "Booting Server"
-  su --login "${USERNAME}" --shell /bin/bash --command "tail --follow=name --retry --lines=0 '${INPUT_FILE}' | '${START_SCRIPT}' -ServerQueryPort=${PORT_SERVER_QUERY} -BeaconPort=${PORT_BEACON} -Port=${PORT_SERVER} -log -unattended" &
-  tail --pid=$(cat "$(getServerProcessId)") --follow=descriptor /dev/null
-  log "Server Shutdown"
-  saveLogFiles
-}
-
 stopServer() {
   local id="$(getServerProcessId)"
   local waitTime=0;
@@ -107,4 +97,24 @@ stopServer() {
 
     tail --pid=${id} --follow=descriptor /dev/null
   fi
+}
+
+startServer() {
+  local id=""
+
+  createLogFiles
+  updateUser
+  updateServer
+
+  trap "{ echo 'Quit Signal Received, Stopping the service' ; stopServer ; }" SIGQUIT
+  trap "{ echo 'Abort Signal Received, Stopping the service' ; stopServer ; }" SIGABRT
+  trap "{ echo 'Interrupt Signal Received, Stopping the service' ; stopServer ; }" SIGINT
+  trap "{ echo 'Terminate Signal Received, Stopping the service' ; stopServer ; }" SIGTERM
+
+  log "Booting Server"
+  su --login "${USERNAME}" --shell /bin/bash --command "tail --follow=name --retry --lines=0 '${INPUT_FILE}' | '${START_SCRIPT}' -ServerQueryPort=${PORT_SERVER_QUERY} -BeaconPort=${PORT_BEACON} -Port=${PORT_SERVER} -log -unattended" &
+  tail --pid=$(cat "$(getServerProcessId)") --follow=descriptor /dev/null
+  log "Server Shutdown"
+
+  saveLogFiles
 }
