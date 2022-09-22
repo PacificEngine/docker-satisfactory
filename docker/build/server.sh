@@ -112,7 +112,6 @@ startServer() {
   trap "{ echo 'Abort Signal Received' ; /build/stop.sh ; }" SIGABRT
   trap "{ echo 'Interrupt Signal Received' ; /build/stop.sh ; }" SIGINT
   trap "{ echo 'Terminate Signal Received' ; /build/stop.sh ; }" SIGTERM
-  trap "{ echo 'Exit Signal Received' ; /build/stop.sh ; }" EXIT
 
   log "Booting Server"
   su --login "${USERNAME}" --shell /bin/bash --command "tail --follow=name --retry --lines=0 '${INPUT_FILE}' | '${START_SCRIPT}' -ServerQueryPort=${PORT_SERVER_QUERY} -BeaconPort=${PORT_BEACON} -Port=${PORT_SERVER} -log -unattended" &
@@ -120,4 +119,6 @@ startServer() {
   log "Server Shutdown"
 
   saveLogFiles
+
+  trap - SIGQUIT SIGABRT SIGINT SIGTERM
 }
