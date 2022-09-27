@@ -49,6 +49,7 @@ saveLogFiles() {
   if [[ -f "${SIMPLE_LOG_FILE}" ]]; then
     runCommandAsLocalUser "mv '${SIMPLE_LOG_FILE}' '${LOG_DIRECTORY}/$(head --lines=1 "${SIMPLE_LOG_FILE}")'"
   fi
+  runCommandAsLocalUser "rm ${CURRENT_USERS_FILE}"
 }
 
 createLogFiles() {
@@ -56,6 +57,7 @@ createLogFiles() {
   runCommandAsLocalUser "echo 'input.${DATE}.log' > '${INPUT_FILE}'"
   runCommandAsLocalUser "echo 'update.${DATE}.log' > '${UPDATE_LOG_FILE}'"
   runCommandAsLocalUser "echo 'simple.${DATE}.log' > '${SIMPLE_LOG_FILE}'"
+  runCommandAsLocalUser "echo '' > '${CURRENT_USERS_FILE}'"
 }
 
 updateUser() {
@@ -121,22 +123,22 @@ addUser() {
   local user="${2}"
 
   removeUser "${id}"
-  echo "${id} ${user}" >> "${CURRENT_USERS_FILE}"
+  runCommandAsLocalUser "echo '${id} ${user}' >> '${CURRENT_USERS_FILE}'"
 }
 
 activeUser() {
-  cat "${CURRENT_USERS_FILE}" | regexExtract '\s+(.*)' 1 | regexReplaceMultiline '\s+' ' '
+  cat "${CURRENT_USERS_FILE}" | perl /build/regex.pl --global --extract '\s+(.*)' 1 | perl /build/regex.pl --global --multiline --replace '\s+' ' ' | perl /build/regex.pl --multiline --trim
 }
 
 getUser() {
   local id="$(echo "${1}" | sed 's/[^^]/[&]/g; s/\^/\\^/g')"
-  cat "${CURRENT_USERS_FILE}" | regexExtract "${id}\s+(.*)" 1 | trim
+  cat "${CURRENT_USERS_FILE}" | perl /build/regex.pl --global --extract "${id}\s+(.*)" 1 | perl /build/regex.pl --multiline --trim
 }
 
 removeUser() {
   local id="$(echo "${1}" | sed 's/[^^]/[&]/g; s/\^/\\^/g')"
-  cat "${CURRENT_USERS_FILE}" | sed -i "/^${id}/d" > "${CURRENT_USERS_FILE}.temp"
-  mv "${CURRENT_USERS_FILE}.temp" "${CURRENT_USERS_FILE}"
+  cat "${CURRENT_USERS_FILE}" | sed "/^${id}/d" > "${CURRENT_USERS_FILE}.temp"
+  runCommandAsLocalUser "mv '${CURRENT_USERS_FILE}.temp' '${CURRENT_USERS_FILE}'"
 }
 
 processLog() {
@@ -144,29 +146,29 @@ processLog() {
   local name=''
   local time=''
 
-  time="$(regexExtract "${1}" "${REGEX_SEVER_START}" 1)"
+  time="$(perl /build/regex.pl --extract "${REGEX_SEVER_START}" 1 --input "${1}")"
   if [[ -n "${time}" ]]; then
     log "Server Started in ${time}s"
   fi
 
-  time="$(regexExtract "${1}" "${REGEX_SESSION_START}" 1)"
+  time="$(perl /build/regex.pl --extract "${REGEX_SESSION_START}" 1 --input "${1}")"
   if [[ -n "${time}" ]]; then
     log "Session Started in ${time}s"
   fi
 
-  id="$(regexExtract "${1}" "${REGEX_PLAYER_LOGIN}" 2)"
-  name="$(regexExtract "${1}" "${REGEX_PLAYER_LOGIN}" 1)"
+  id="$(perl /build/regex.pl --extract "${REGEX_PLAYER_LOGIN}" 2 --input "${1}")"
+  name="$(perl /build/regex.pl --extract "${REGEX_PLAYER_LOGIN}" 1 --input "${1}")"
   if [[ -n "${id}" && -n "${name}" ]]; then
     log "Player Joined (${name})"
     addUser "${id}" "${name}"
   fi
 
-  name="$(regexExtract "${1}" "${REGEX_PLAYER_JOINED}" 1)"
+  name="$(perl /build/regex.pl --extract "${REGEX_PLAYER_JOINED}" 1 --input "${1}")"
   if [[ -n "${name}" ]]; then
     log "Player List ($(activeUser))"
   fi
 
-  id="$(regexExtract "${1}" "${REGEX_PLAYER_LEAVE}" 1)"
+  id="$(perl /build/regex.pl --extract "${REGEX_PLAYER_LEAVE}" 1 --input "${1}")"
   if [[ -n "${id}" ]]; then
     log "Player Left ($(getUser "${id}"))"
     removeUser "${id}"

@@ -1,5 +1,4 @@
 #!/bin/bash
-source /build/regex.sh
 
 # Usage: getProcess [ProcessType] [RegEx]
 getProcess() {
@@ -7,12 +6,12 @@ getProcess() {
   local processesOfRegex=''
   local processList=''
   if [[ -z "${1}" ]]; then
-    ps aux | regexFind ".*${2}.*" | awk '{print $2}' | regexReplaceMultiline '\s+' ' ' | trim
+    ps aux | perl /build/regex.pl --find ".*${2}.*" | awk '{print $2}' | perl /build/regex.pl --multiline --replace '\s+' ' ' | perl /build/regex.pl --multiline --trim
   else
     processesOfType="$(pidof "${1}")"
-    processesOfRegex="$(ps aux | regexFind ".*${2}.*" | awk '{print $2}')"
-    processList="$(echo ${processesOfType[@]} ${processesOfRegex[@]} | regexReplace '\s+' '\n' | sort | uniq -d)"
-    echo "${processList}" | regexReplaceMultiline '\s+' ' ' | trim
+    processesOfRegex="$(ps aux | perl /build/regex.pl --find ".*${2}.*" | awk '{print $2}')"
+    processList="$(echo ${processesOfType[@]} ${processesOfRegex[@]} | perl /build/regex.pl --multiline --replace '\s+' '\n' | sort | uniq -d)"
+    echo "${processList}" | perl /build/regex.pl --multiline --replace '\s+' ' ' | perl /build/regex.pl --multiline --trim
   fi
 }
 
