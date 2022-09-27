@@ -1,5 +1,5 @@
 #!/bin/bash
-source /build/regex.sh
+source /server/regex.sh
 source /build/process.sh
 source /build/properties.sh
 
@@ -127,12 +127,12 @@ addUser() {
 }
 
 activeUser() {
-  cat "${CURRENT_USERS_FILE}" | perl /build/regex.pl --global --extract '\s+(.*)' 1 | perl /build/regex.pl --global --multiline --replace '\s+' ' ' | perl /build/regex.pl --multiline --trim
+  cat "${CURRENT_USERS_FILE}" | regex --global --find '\s+(.*)' --group 1 | regex --global --multiline --find '\s+' --replace ' ' --trim
 }
 
 getUser() {
   local id="$(echo "${1}" | sed 's/[^^]/[&]/g; s/\^/\\^/g')"
-  cat "${CURRENT_USERS_FILE}" | perl /build/regex.pl --global --extract "${id}\s+(.*)" 1 | perl /build/regex.pl --multiline --trim
+  cat "${CURRENT_USERS_FILE}" | regex --global --find "${id}\s+(.*)" --group 1 --trim
 }
 
 removeUser() {
@@ -146,29 +146,29 @@ processLog() {
   local name=''
   local time=''
 
-  time="$(perl /build/regex.pl --extract "${REGEX_SEVER_START}" 1 --input "${1}")"
+  time="$(regex --find "${REGEX_SEVER_START}" --group 1 --input "${1}")"
   if [[ -n "${time}" ]]; then
     log "Server Started in ${time}s"
   fi
 
-  time="$(perl /build/regex.pl --extract "${REGEX_SESSION_START}" 1 --input "${1}")"
+  time="$(regex --find "${REGEX_SESSION_START}" --group 1 --input "${1}")"
   if [[ -n "${time}" ]]; then
     log "Session Started in ${time}s"
   fi
 
-  id="$(perl /build/regex.pl --extract "${REGEX_PLAYER_LOGIN}" 2 --input "${1}")"
-  name="$(perl /build/regex.pl --extract "${REGEX_PLAYER_LOGIN}" 1 --input "${1}")"
+  id="$(regex --find "${REGEX_PLAYER_LOGIN}" --group 2 --input "${1}")"
+  name="$(regex --find "${REGEX_PLAYER_LOGIN}" --group 1 --input "${1}")"
   if [[ -n "${id}" && -n "${name}" ]]; then
     log "Player Joined (${name})"
     addUser "${id}" "${name}"
   fi
 
-  name="$(perl /build/regex.pl --extract "${REGEX_PLAYER_JOINED}" 1 --input "${1}")"
+  name="$(regex --find "${REGEX_PLAYER_JOINED}" --group 1 --input "${1}")"
   if [[ -n "${name}" ]]; then
     log "Player List ($(activeUser))"
   fi
 
-  id="$(perl /build/regex.pl --extract "${REGEX_PLAYER_LEAVE}" 1 --input "${1}")"
+  id="$(regex --find "${REGEX_PLAYER_LEAVE}" --group 1 --input "${1}")"
   if [[ -n "${id}" ]]; then
     log "Player Left ($(getUser "${id}"))"
     removeUser "${id}"
