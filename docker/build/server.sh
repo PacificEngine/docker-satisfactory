@@ -57,7 +57,7 @@ createLogFiles() {
   runCommandAsLocalUser "echo 'input.${DATE}.log' > '${INPUT_FILE}'"
   runCommandAsLocalUser "echo 'update.${DATE}.log' > '${UPDATE_LOG_FILE}'"
   runCommandAsLocalUser "echo 'simple.${DATE}.log' > '${SIMPLE_LOG_FILE}'"
-  runCommandAsLocalUser "echo '' > '${CURRENT_USERS_FILE}'"
+  runCommandAsLocalUser "touch '${CURRENT_USERS_FILE}'"
 }
 
 updateUser() {
