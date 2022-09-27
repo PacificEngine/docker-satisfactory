@@ -116,8 +116,11 @@ sub Arguments {
     } elsif (length($additionalParameters)) {
         $input=$additionalParameters;
     }
-    $expression =~ "s/\\//\\\\//g";
-    $replace =~ "s/\\//\\\\//g";
+
+    $expression =~ s/\//\\\//g ;
+    $replace =~ s/\\/\\\\/g ;
+    $replace =~ s/"/\"/g ;
+    $replace = '"' . $replace . '"';
 
     # Validate Parameters
     if ($type eq 'NONE' && $trim eq 'false') {
@@ -222,15 +225,15 @@ my $doSubstitution = sub($) {
     my ($self,$line) = @_;
     if ($self->{global} eq 'true') {
         if ($self->{multiline} eq 'true') {
-            $line =~ s/$self->{expression}/$self->{replace}/gs ;
+            $line =~ s/$self->{expression}/$self->{replace}/gsee ;
         } else {
-            $line =~ s/$self->{expression}/$self->{replace}/g ;
+            $line =~ s/$self->{expression}/$self->{replace}/gee ;
         }
     } else {
         if ($self->{multiline} eq 'true') {
-            $line =~ s/$self->{expression}/$self->{replace}/s ;
+            $line =~ s/$self->{expression}/$self->{replace}/see ;
         } else {
-            $line =~ s/$self->{expression}/$self->{replace}/ ;
+            $line =~ s/$self->{expression}/$self->{replace}/ee ;
         }
     }
     return $line;
@@ -280,7 +283,6 @@ my $processLine = sub($) {
 
 my $processInput = sub {
     my $self = shift;
-    my $multilineVal='';
     my @output = ();
     my @lines = ();
 
@@ -291,6 +293,7 @@ my $processInput = sub {
     }
 
     return sub {
+        my $multilineVal='';
         if (scalar @output > 0) {
             return pop(@output);
         } elsif ($self->{stdin} eq 'true') {
@@ -305,6 +308,12 @@ my $processInput = sub {
                     }
                 }
             }
+            if (length($multilineVal)) {
+                @output = $self->$processLine($multilineVal);
+                if (scalar @output > 0) {
+                    return pop(@output);
+                }
+            }
             return undef;
         } elsif (length($self->{file})) {
             while (my $line = <INPUT>) {
@@ -316,6 +325,12 @@ my $processInput = sub {
                     if (scalar @output > 0) {
                         return pop(@output);
                     }
+                }
+            }
+            if (length($multilineVal)) {
+                @output = $self->$processLine($multilineVal);
+                if (scalar @output > 0) {
+                    return pop(@output);
                 }
             }
             close(INPUT);
@@ -332,13 +347,15 @@ my $processInput = sub {
                     }
                 }
             }
+            if (length($multilineVal)) {
+                @output = $self->$processLine($multilineVal);
+                if (scalar @output > 0) {
+                    return pop(@output);
+                }
+            }
             return undef;
         } else {
             die('Bad Input');
-        }
-
-        if (length($multilineVal)) {
-            @output = $self->$processLine($multilineVal);
         }
     }
 };
