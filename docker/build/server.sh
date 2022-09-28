@@ -149,6 +149,7 @@ startServer() {
       if [[ -n "${id}" ]]; then
         break
       fi
+      sleep 1
     done
     if [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTING" && -n "${id}" ]]; then
       echo "STARTED" > "${PROCESS_STATUS_FILE}"
@@ -158,6 +159,7 @@ startServer() {
           break
         fi
         runCommandAsLocalUser "tail --pid=${id} --follow=name --lines +1 '${MAIN_LOG_FILE}' | perl /build/perl/logs.pl '${SIMPLE_LOG_FILE}' '${CURRENT_USERS_FILE}'"
+        sleep 1
       done
     else
       stopServer
