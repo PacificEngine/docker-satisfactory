@@ -48,6 +48,12 @@ sub Arguments {
             } else {
                 $type='COUNT';
             }
+        } elsif ($parameters[$i] eq '-d' || $parameters[$i] eq '--delete') {
+            if ($type ne 'NONE' && $type ne 'FIND') {
+                $error.="\nCannot use DELETE with $type.";
+            } else {
+                $type='DELETE';
+            }
         } elsif ($parameters[$i] eq '-e' || $parameters[$i] eq '-ext' || $parameters[$i] eq '--extract') {
             if ($type ne 'NONE' && $type ne 'FIND') {
                 $error.="\nCannot use EXTRACT with $type.";
@@ -153,6 +159,7 @@ sub Arguments {
         die("$error\n" .
             "Usage: perl $scriptFileName\n" .
                 "\t-c|--count\n" .
+                "\t-d|--delete\n" .
                 "\t-e|--ext|--extract [Expression]\n" .
                 "\t-f|--find [Expression]\n" .
                 "\t--file [InputFilePath]\n" .
@@ -244,9 +251,13 @@ my $processLine = sub($) {
 
     # Preform Regex
     my @results = ();
-    if ($self->{type} eq 'COUNT' || $self->{type} eq 'EXTRACT' || $self->{type} eq 'FIND' || $self->{type} eq 'GROUP') {
+    if ($self->{type} eq 'COUNT' || $self->{type} eq 'DELETE' || $self->{type} eq 'EXTRACT' || $self->{type} eq 'FIND' || $self->{type} eq 'GROUP') {
         my @matches = $self->$getMatches($line);
-        if ($self->{type} eq 'COUNT') {
+        if ($self->{type} eq 'DELETE') {
+            if (scalar(@matches) == 0) {
+                push(@results, $line);
+            }
+        } elsif ($self->{type} eq 'COUNT') {
             push(@results, scalar(@matches));
         } elsif ($self->{type} eq 'GROUP' || $self->{type} eq 'FIND') {
             foreach my $match (@matches) {
@@ -282,11 +293,13 @@ my $processLine = sub($) {
 };
 
 my $processInput = sub {
-    my $self = shift;
+    my ($self,$input) = @_;
     my @output = ();
     my @lines = ();
 
-    if (length($self->{file})) {
+    if (length($input)) {
+        @lines = split("\n", $input);
+    } elsif (length($self->{file})) {
         open(INPUT, $self->{file}) or die('Could not open ' . $self->{file});
     } elsif (length($self->{input})) {
         @lines = split("\n", $self->{input});
@@ -296,6 +309,25 @@ my $processInput = sub {
         my $multilineVal='';
         if (scalar @output > 0) {
             return pop(@output);
+        } elsif (length($input)) {
+            while (my $line = pop(@lines)) {
+                if ($self->{multiline} eq 'true') {
+                    $multilineVal.="$line\n";
+                } else {
+                    chomp($line);
+                    @output = $self->$processLine($line);
+                    if (scalar @output > 0) {
+                        return pop(@output);
+                    }
+                }
+            }
+            if (length($multilineVal)) {
+                @output = $self->$processLine($multilineVal);
+                if (scalar @output > 0) {
+                    return pop(@output);
+                }
+            }
+            return undef;
         } elsif ($self->{stdin} eq 'true') {
             while (my $line = <STDIN>) {
                 if ($self->{multiline} eq 'true') {
@@ -361,8 +393,8 @@ my $processInput = sub {
 };
 
 my $processOutput = sub {
-    my ($self,$line) = @_;
-    if (length($self->{output})) {
+    my ($self,$line,$output) = @_;
+    if (length($output) || length($self->{output})) {
         print OUTPUT $line . "\n";
     } elsif ($self->{stdout} eq 'true') {
         print STDOUT $line . "\n";
@@ -372,19 +404,21 @@ my $processOutput = sub {
 };
 
 sub Process {
-    my $self = shift;
-    my $next = $self->$processInput();
-    if (length($self->{output})) {
+    my ($self,$input,$output) = @_;
+    my $next = $self->$processInput($input);
+    if (length($output)) {
+        open(OUTPUT, $output) or die('Could not open ' . $self->{output});
+    } elsif (length($self->{output})) {
         open(OUTPUT, $self->{output}) or die('Could not open ' . $self->{output});
     }
     if ($self->{iterator} eq 'true') {
         return $next;
     } else {
-        while ( my $output = $next->() ) {
-            $self->$processOutput($output);
+        while ( my $line = $next->() ) {
+            $self->$processOutput($line,$output);
         }
     }
-    if (length($self->{output})) {
+    if (length($output) || length($self->{output})) {
         close(OUTPUT);
     }
 }

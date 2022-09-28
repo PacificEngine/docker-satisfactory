@@ -15,13 +15,6 @@ PROCESS_STATUS_FILE="${INSTALL_DIRECTORY}/process.status"
 UPDATE_SCRIPT="${INSTALL_DIRECTORY}/update.script"
 START_SCRIPT="${INSTALL_DIRECTORY}/FactoryServer.sh"
 
-REGEX_SEVER_START='Took ([0-9\.]+) seconds to LoadMap.*/Game/FactoryGame/Map/DedicatedserverEntry' # \1 is Time Taken
-REGEX_SESSION_START='Took ([0-9\.]+) seconds to LoadMap.*/Game/FactoryGame/Map/GameLevel01/Persistent_Level' # \1 is Time Taken
-REGEX_PLAYER_LOGIN='Login request:.*Name=(.+)\s+userId:\s+(\S+)' # \1 is Name, \2 is ID
-REGEX_PLAYER_JOIN='Join request:.*Name=([^?]+)' # \1 is Name
-REGEX_PLAYER_JOINED='Join succeeded:\s+(.+)' # \1 is Name
-REGEX_PLAYER_LEAVE='UNetConnection::Close.*Driver:\s+GameNetDriver.*UniqueId:\s+([^,]+),' # \1 is ID
-
 runCommandAsLocalUser() {
   su --login "${USERNAME}" --shell /bin/bash --command "${@}"
 }
@@ -118,63 +111,6 @@ stopServer() {
   fi
 }
 
-addUser() {
-  local id="${1}"
-  local user="${2}"
-
-  removeUser "${id}"
-  runCommandAsLocalUser "echo '${id} ${user}' >> '${CURRENT_USERS_FILE}'"
-}
-
-activeUser() {
-  cat "${CURRENT_USERS_FILE}" | regex --global --find '\s+(.*)' --group 1 | regex --global --multiline --find '\s+' --replace ' ' --trim
-}
-
-getUser() {
-  local id="$(echo "${1}" | sed 's/[^^]/[&]/g; s/\^/\\^/g')"
-  cat "${CURRENT_USERS_FILE}" | regex --global --find "${id}\s+(.*)" --group 1 --trim
-}
-
-removeUser() {
-  local id="$(echo "${1}" | sed 's/[^^]/[&]/g; s/\^/\\^/g')"
-  cat "${CURRENT_USERS_FILE}" | sed "/^${id}/d" > "${CURRENT_USERS_FILE}.temp"
-  runCommandAsLocalUser "mv '${CURRENT_USERS_FILE}.temp' '${CURRENT_USERS_FILE}'"
-}
-
-processLog() {
-  local id=''
-  local name=''
-  local time=''
-
-  time="$(regex --find "${REGEX_SEVER_START}" --group 1 --input "${1}")"
-  if [[ -n "${time}" ]]; then
-    log "Server Started in ${time}s"
-  fi
-
-  time="$(regex --find "${REGEX_SESSION_START}" --group 1 --input "${1}")"
-  if [[ -n "${time}" ]]; then
-    log "Session Started in ${time}s"
-  fi
-
-  id="$(regex --find "${REGEX_PLAYER_LOGIN}" --group 2 --input "${1}")"
-  name="$(regex --find "${REGEX_PLAYER_LOGIN}" --group 1 --input "${1}")"
-  if [[ -n "${id}" && -n "${name}" ]]; then
-    log "Player Joined (${name})"
-    addUser "${id}" "${name}"
-  fi
-
-  name="$(regex --find "${REGEX_PLAYER_JOINED}" --group 1 --input "${1}")"
-  if [[ -n "${name}" ]]; then
-    log "Player List ($(activeUser))"
-  fi
-
-  id="$(regex --find "${REGEX_PLAYER_LEAVE}" --group 1 --input "${1}")"
-  if [[ -n "${id}" ]]; then
-    log "Player Left ($(getUser "${id}"))"
-    removeUser "${id}"
-  fi
-}
-
 startServer() {
   local id=''
   local line=''
@@ -208,9 +144,7 @@ startServer() {
         if [[ -z "${id}" ]]; then
           break
         fi
-        tail --pid=${id} --follow=name --lines +1 "${MAIN_LOG_FILE}" | while read line; do
-          processLog "${line}"
-        done
+        runCommandAsLocalUser "tail --pid=${id} --follow=name --lines +1 '${MAIN_LOG_FILE}' | perl /build/logs.pl '${SIMPLE_LOG_FILE}' '${CURRENT_USERS_FILE}'"
       done
     else
       stopServer
