@@ -43,7 +43,7 @@ ARG PORT_BEACON=''
 ARG PORT_SERVER=''
 ARG AUTO_UPDATE=''
 COPY docker /
-RUN cat '/build/properties.sh.template' \
+RUN cat '/server/properties.template' \
         | sed --regexp-extended "s/<%INSTALL_DIRECTORY%>/${INSTALL_DIRECTORY//\//\\/}/g" \
         | sed --regexp-extended "s/<%LOG_DIRECTORY%>/${LOG_DIRECTORY//\//\\/}/g" \
         | sed --regexp-extended "s/<%USERNAME%>/${USERNAME//\//\\/}/g" \
@@ -55,8 +55,9 @@ RUN cat '/build/properties.sh.template' \
         | sed --regexp-extended "s/<%PORT_BEACON%>/${PORT_BEACON:-15000}/g" \
         | sed --regexp-extended "s/<%PORT_SERVER%>/${PORT_SERVER:-7777}/g" \
         | sed --regexp-extended "s/<%AUTO_UPDATE%>/${AUTO_UPDATE:-true}/g" \
-        > '/build/properties.sh' && \
-    rm '/build/properties.sh.template' && \
+        > '/server/properties' && \
+    rm '/server/properties.template' && \
+    chmod 555 /server/*.sh && \
 	chmod 555 /build/*.sh
 
 ENTRYPOINT ["/bin/bash", "/build/start.sh"]

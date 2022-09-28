@@ -1,7 +1,12 @@
 #!/bin/bash
 source /server/regex.sh
-source /build/process.sh
-source /build/properties.sh
+source /server/process.sh
+source /server/properties.sh
+
+PORT_SERVER_QUERY="${PORT_SERVER_QUERY:-$(getProperty "PORT_SERVER_QUERY")}"
+PORT_BEACON="${PORT_BEACON:-$(getProperty "PORT_BEACON")}"
+PORT_SERVER="${PORT_SERVER:-$(getProperty "PORT_SERVER")}"
+AUTO_UPDATE="${AUTO_UPDATE:-$(getProperty "AUTO_UPDATE")}"
 
 DATE="$(date "+%F-%H:%M:%S")"
 LOG_DATE_FORMAT="+%FT%H:%M:%S"
@@ -144,7 +149,7 @@ startServer() {
         if [[ -z "${id}" ]]; then
           break
         fi
-        runCommandAsLocalUser "tail --pid=${id} --follow=name --lines +1 '${MAIN_LOG_FILE}' | perl /build/logs.pl '${SIMPLE_LOG_FILE}' '${CURRENT_USERS_FILE}'"
+        runCommandAsLocalUser "tail --pid=${id} --follow=name --lines +1 '${MAIN_LOG_FILE}' | perl /build/perl/logs.pl '${SIMPLE_LOG_FILE}' '${CURRENT_USERS_FILE}'"
       done
     else
       stopServer
