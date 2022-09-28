@@ -3,6 +3,14 @@ source /server/regex.sh
 source /server/process.sh
 source /server/properties.sh
 
+INSTALL_DIRECTORY="$(getProperty "INSTALL_DIRECTORY")"
+LOG_DIRECTORY="$(getProperty "LOG_DIRECTORY")"
+USERNAME="$(getProperty "USERNAME")"
+USERGROUP="$(getProperty "USERGROUP")"
+GAME_ID="$(getProperty "GAME_ID")"
+EXPERIMENTAL="$(getProperty "EXPERIMENTAL")"
+UPDATE_ARGUMENTS="$(getProperty "UPDATE_ARGUMENTS")"
+
 PORT_SERVER_QUERY="${PORT_SERVER_QUERY:-$(getProperty "PORT_SERVER_QUERY")}"
 PORT_BEACON="${PORT_BEACON:-$(getProperty "PORT_BEACON")}"
 PORT_SERVER="${PORT_SERVER:-$(getProperty "PORT_SERVER")}"
