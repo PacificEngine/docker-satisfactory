@@ -19,14 +19,14 @@ getProcess() {
 
 # Usage: stopProcess [ProcessList]
 stopProcess() {
-	if [[ -n "${1}" ]]; then
-		kill ${1}
-	fi
+  if [[ -n "${1}" ]]; then
+    kill ${1}
+  fi
 }
 
 # Usage: killProcess [ProcessList]
 killProcess() {
-	if [[ -n "${1}" ]]; then
-		kill -9 ${1}
-	fi
+  if [[ -n "${1}" ]]; then
+    kill -9 ${1}
+  fi
 }

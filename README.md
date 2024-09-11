@@ -10,7 +10,7 @@ queryport=15777
 directory=/home/satisfactory
 username=satisfactory
 service=satisfactory
-version=early-access
+version=release
 
 # Setup Commands
 mkdir -p "${directory}/logs"
@@ -48,7 +48,7 @@ docker volume prune
 docker system prune -a
 ```
 
-## Early Access
+## Release
 ```shell
 docker build --file "build.Dockerfile" --tag "satisfactory:latest" .
 docker image tag satisfactory:latest pacificengine/satisfactory:ubuntu-20-release
