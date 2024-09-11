@@ -20,8 +20,6 @@ RUN mkdir --parents ${LOG_DIRECTORY} && \
 	chmod 755 -R ${INSTALL_DIRECTORY}
 
 ARG GAME_ID='1690800'
-ARG EXPERIMENTAL='false'
-ARG EXPERIMENTAL_ARGS='-beta experimental'
 COPY install ${INSTALL_DIRECTORY}
 RUN cat "${INSTALL_DIRECTORY}/update.script.template" \
         | sed --regexp-extended "s/<%INSTALL_DIRECTORY%>/${INSTALL_DIRECTORY//\//\\/}/g" \
@@ -29,8 +27,6 @@ RUN cat "${INSTALL_DIRECTORY}/update.script.template" \
         | sed --regexp-extended "s/<%USERNAME%>/${USERNAME//\//\\/}/g" \
         | sed --regexp-extended "s/<%USERGROUP%>/${USERGROUP//\//\\/}/g" \
         | sed --regexp-extended "s/<%GAME_ID%>/${GAME_ID//\//\\/}/g" \
-        | sed --regexp-extended "s/<%EXPERIMENTAL%>/${EXPERIMENTAL//\//\\/}/g" \
-        | sed --regexp-extended "s/<%UPDATE_ARGUMENTS%>/$(if [ "${EXPERIMENTAL}" = "true" ]; then echo "${EXPERIMENTAL_ARGS//\//\\/}"; fi)/g" \
         > "${INSTALL_DIRECTORY}/update.script" && \
     rm "${INSTALL_DIRECTORY}/update.script.template" && \
 	chmod 555 "${INSTALL_DIRECTORY}/update.script"
@@ -49,8 +45,6 @@ RUN cat '/server/properties.template' \
         | sed --regexp-extended "s/<%USERNAME%>/${USERNAME//\//\\/}/g" \
         | sed --regexp-extended "s/<%USERGROUP%>/${USERGROUP//\//\\/}/g" \
         | sed --regexp-extended "s/<%GAME_ID%>/${GAME_ID//\//\\/}/g" \
-        | sed --regexp-extended "s/<%EXPERIMENTAL%>/${EXPERIMENTAL//\//\\/}/g" \
-        | sed --regexp-extended "s/<%UPDATE_ARGUMENTS%>/$(if [ "${EXPERIMENTAL}" = "true" ]; then echo "${EXPERIMENTAL_ARGS//\//\\/}"; fi)/g" \
         | sed --regexp-extended "s/<%PORT_SERVER_QUERY%>/${PORT_SERVER_QUERY:-15777}/g" \
         | sed --regexp-extended "s/<%PORT_BEACON%>/${PORT_BEACON:-15000}/g" \
         | sed --regexp-extended "s/<%PORT_SERVER%>/${PORT_SERVER:-7777}/g" \

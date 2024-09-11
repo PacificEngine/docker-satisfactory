@@ -3,5 +3,5 @@
 @sSteamCmdForcePlatformType linux
 force_install_dir <%INSTALL_DIRECTORY%>
 login anonymous
-app_update <%GAME_ID%> <%UPDATE_ARGUMENTS%> validate
+app_update <%GAME_ID%> validate
 quit
