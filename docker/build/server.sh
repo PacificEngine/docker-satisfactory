@@ -9,8 +9,6 @@ USERNAME="$(getProperty "USERNAME")"
 USERGROUP="$(getProperty "USERGROUP")"
 GAME_ID="$(getProperty "GAME_ID")"
 
-PORT_SERVER_QUERY="${PORT_SERVER_QUERY:-$(getProperty "PORT_SERVER_QUERY")}"
-PORT_BEACON="${PORT_BEACON:-$(getProperty "PORT_BEACON")}"
 PORT_SERVER="${PORT_SERVER:-$(getProperty "PORT_SERVER")}"
 AUTO_UPDATE="${AUTO_UPDATE:-$(getProperty "AUTO_UPDATE")}"
 
@@ -141,7 +139,7 @@ startServer() {
 
   if [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTING" ]]; then
     log "Booting Server"
-    runCommandAsLocalUser "tail --follow=name --retry --lines=0 '${INPUT_FILE}' | '${START_SCRIPT}' -ServerQueryPort=${PORT_SERVER_QUERY} -BeaconPort=${PORT_BEACON} -Port=${PORT_SERVER} -log -unattended" &
+    runCommandAsLocalUser "tail --follow=name --retry --lines=0 '${INPUT_FILE}' | '${START_SCRIPT}' -Port=${PORT_SERVER} -log -unattended" &
     while [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTING" ]]; do
       id="$(getServerProcessId)"
       if [[ -n "${id}" ]]; then

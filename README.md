@@ -23,10 +23,7 @@ chmod 755 -R "${directory}"
 # Docker Run Command
 docker run -d --name ${service} \
   --publish ${serverport}:${serverport}/udp \
-  --publish ${beaconport}:${beaconport}/udp \
-  --publish ${queryport}:${queryport}/udp \
-  --env PORT_SERVER_QUERY=${queryport} \
-  --env PORT_BEACON=${beaconport} \
+  --publish ${serverport}:${serverport}/tcp \
   --env PORT_SERVER=${serverport} \
   --env AUTO_UPDATE=true \
   --env PUID=$(id -u ${username}) \
