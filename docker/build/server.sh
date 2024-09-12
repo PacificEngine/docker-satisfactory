@@ -64,10 +64,10 @@ createLogFiles() {
 
 updateUser() {
   if [[ -n "${PUID}" ]]; then
-    usermod -u "${PUID}" "${USERNAME}"
+    usermod --non-unique --uid "${PUID}" ${USERNAME}
   fi
   if [[ -n "${PGID}" ]]; then
-    groupmod -g "${PGID}" "${USERGROUP}"
+    groupmod --non-unique --gid "${PGID}" ${USERGROUP}
   fi
   chown "${USERNAME}":"${USERGROUP}" -R "${INSTALL_DIRECTORY}"
   chown "${USERNAME}":"${USERGROUP}" "${LOG_DIRECTORY}"

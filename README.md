@@ -2,8 +2,8 @@
 https://hub.docker.com/r/pacificengine/satisfactory
 
 # Usage
-```shell
 # Configuration Parameters
+```shell
 serverport=7777
 beaconport=15000
 queryport=15777
@@ -11,16 +11,20 @@ directory=/home/satisfactory
 username=satisfactory
 service=satisfactory
 version=release
+```
 
 # Setup Commands
+```shell
 mkdir -p "${directory}/logs"
 mkdir -p "${directory}/config"
 mkdir -p "${directory}/saves"
 touch "${directory}/GUID.ini"
 chown $(id -u ${username}):$(id -g ${username}) -R "${directory}"
 chmod 755 -R "${directory}"
+```
 
 # Docker Run Command
+```shell
 docker run -d --name ${service} \
   --publish ${serverport}:${serverport}/udp \
   --publish ${serverport}:${serverport}/tcp \
@@ -47,7 +51,7 @@ docker system prune -a
 
 ## Release
 ```shell
-docker build --file "build.Dockerfile" --tag "satisfactory:latest" .
+docker build --file "build.Dockerfile" --tag "satisfactory:latest" --build-arg DISTRIBUTION=ubuntu-20 .
 docker image tag satisfactory:latest pacificengine/satisfactory:ubuntu-20-release
 docker image tag satisfactory:latest pacificengine/satisfactory:release
 docker image tag satisfactory:latest pacificengine/satisfactory:ubuntu-20-latest

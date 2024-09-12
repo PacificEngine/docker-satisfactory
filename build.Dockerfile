@@ -6,14 +6,16 @@ RUN apt-get update && \
   apt-get install -y \
     coreutils \
     curl \
-    jq \
+    jq
 
 ARG INSTALL_DIRECTORY='/home/satisfactory'
 ARG LOG_DIRECTORY="${INSTALL_DIRECTORY}/FactoryGame/Saved/Logs"
-ARG USERNAME='steam'
-ARG USERGROUP='steam'
+ARG USERNAME='satisfactory'
+ARG USERGROUP='satisfactory'
 RUN mkdir --parents ${LOG_DIRECTORY} && \
   mkdir --parents ${INSTALL_DIRECTORY} && \
+  groupadd ${USERGROUP} && \
+  useradd --system --gid ${USERGROUP} --shell /usr/sbin/nologin ${USERNAME} && \
   chown ${USERNAME}:${USERGROUP} -R ${LOG_DIRECTORY} && \
   chown ${USERNAME}:${USERGROUP} -R ${INSTALL_DIRECTORY} && \
   chmod 755 -R ${LOG_DIRECTORY} && \
