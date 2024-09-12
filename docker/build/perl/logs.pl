@@ -7,14 +7,14 @@ use REGEX;
 my $SIMPLE_LOG_FILE="$ARGV[0]";
 my $CURRENT_USERS_FILE="$ARGV[1]";
 my $LOG_DATE_FORMAT="+%FT%H:%M:%S";
-my $REGEX_SEVER_START=REGEX->Arguments('--find', "Took ([0-9\\.]+) seconds to LoadMap.*/Game/FactoryGame/Map/DedicatedserverEntry", '--group', 1, '--iterator');
-my $REGEX_SESSION_START=REGEX->Arguments('--find', "Took ([0-9\\.]+) seconds to LoadMap.*/Game/FactoryGame/Map/GameLevel01/Persistent_Level", '--group', 1, '--iterator');
-my $REGEX_PLAYER_LOGIN_ID=REGEX->Arguments('--find', "Login request:.*Name=(.+)\\s+userId:\\s+([^)]+\\))", '--group', 2, '--iterator');
-my $REGEX_PLAYER_LOGIN_NAME=REGEX->Arguments('--find', "Login request:.*Name=(.+)\\s+userId:\\s+([^)]+\\))", '--group', 1, '--iterator');
-my $REGEX_PLAYER_JOIN_ID=REGEX->Arguments('--find', "Join request:.*ClientIdentity=([^?]+).*Name=([^?]+)", '--group', 1, '--iterator');
-my $REGEX_PLAYER_JOIN_NAME=REGEX->Arguments('--find', "Join request:.*ClientIdentity=([^?]+).*Name=([^?]+)", '--group', 2, '--iterator');
-my $REGEX_PLAYER_JOINED_NAME=REGEX->Arguments('--find', "Join succeeded:\\s+(.+)", '--group', 1, '--iterator');
-my $REGEX_PLAYER_LEAVE_ID=REGEX->Arguments('--find', "UNetConnection::Close.*Driver:\\s+GameNetDriver.*UniqueId:\\s+([^,]+),", '--group', 1, '--iterator');
+my $REGEX_SEVER_START=REGEX->Arguments('--find', "Took ([0-9\\.]+) seconds to LoadMap.*/Game/FactoryGame/Map/DedicatedserverEntry", '--group', 1, '--iterator', '--trim');
+my $REGEX_SESSION_START=REGEX->Arguments('--find', "Took ([0-9\\.]+) seconds to LoadMap.*/Game/FactoryGame/Map/GameLevel01/Persistent_Level", '--group', 1, '--iterator', '--trim');
+my $REGEX_PLAYER_LOGIN_ID=REGEX->Arguments('--find', "Login request:.*Name=(.+)\\s+userId:\\s+([^)]+\\))", '--group', 2, '--iterator', '--trim');
+my $REGEX_PLAYER_LOGIN_NAME=REGEX->Arguments('--find', "Login request:.*Name=(.+)\\s+userId:\\s+([^)]+\\))", '--group', 1, '--iterator', '--trim');
+my $REGEX_PLAYER_JOIN_ID=REGEX->Arguments('--find', "Join request:.*ClientIdentity=([^?]+).*Name=([^?]+)", '--group', 1, '--iterator', '--trim');
+my $REGEX_PLAYER_JOIN_NAME=REGEX->Arguments('--find', "Join request:.*ClientIdentity=([^?]+).*Name=([^?]+)", '--group', 2, '--iterator', '--trim');
+my $REGEX_PLAYER_JOINED_NAME=REGEX->Arguments('--find', "Join succeeded:\\s+(.+)", '--group', 1, '--iterator', '--trim');
+my $REGEX_PLAYER_LEAVE_ID=REGEX->Arguments('--find', "UNetConnection::Close.*Driver:\\s+GameNetDriver.*UniqueId:\\s+([^,]+),", '--group', 1, '--iterator', '--trim');
 
 
 open(SIMPLE, '>>', $SIMPLE_LOG_FILE) or die("Unable to open ${SIMPLE_LOG_FILE}");
