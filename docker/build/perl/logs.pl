@@ -9,11 +9,12 @@ my $CURRENT_USERS_FILE="$ARGV[1]";
 my $LOG_DATE_FORMAT="+%FT%H:%M:%S";
 my $REGEX_SEVER_START=REGEX->Arguments('--find', "Took ([0-9\\.]+) seconds to LoadMap.*/Game/FactoryGame/Map/DedicatedserverEntry", '--group', 1, '--iterator');
 my $REGEX_SESSION_START=REGEX->Arguments('--find', "Took ([0-9\\.]+) seconds to LoadMap.*/Game/FactoryGame/Map/GameLevel01/Persistent_Level", '--group', 1, '--iterator');
-my $REGEX_PLAYER_LOGIN_ID=REGEX->Arguments('--find', "Login request:.*Name=(.+)\\s+userId:\\s+(\\S+)", '--group', 2, '--iterator');
-my $REGEX_PLAYER_LOGIN_NAME=REGEX->Arguments('--find', "Login request:.*Name=(.+)\\s+userId:\\s+(\\S+)", '--group', 1, '--iterator');
-my $REGEX_PLAYER_JOIN=REGEX->Arguments('--find', "Join request:.*Name=([^?]+)", '--group', 1, '--iterator');
-my $REGEX_PLAYER_JOINED=REGEX->Arguments('--find', "Join succeeded:\\s+(.+)", '--group', 1, '--iterator');
-my $REGEX_PLAYER_LEAVE=REGEX->Arguments('--find', "UNetConnection::Close.*Driver:\\s+GameNetDriver.*UniqueId:\\s+([^,]+),", '--group', 1, '--iterator');
+my $REGEX_PLAYER_LOGIN_ID=REGEX->Arguments('--find', "Login request:.*Name=(.+)\\s+userId:\\s+([^)]+\\))", '--group', 2, '--iterator');
+my $REGEX_PLAYER_LOGIN_NAME=REGEX->Arguments('--find', "Login request:.*Name=(.+)\\s+userId:\\s+([^)]+\\))", '--group', 1, '--iterator');
+my $REGEX_PLAYER_JOIN_ID=REGEX->Arguments('--find', "Join request:.*ClientIdentity=([^?]+).*Name=([^?]+)", '--group', 1, '--iterator');
+my $REGEX_PLAYER_JOIN_NAME=REGEX->Arguments('--find', "Join request:.*ClientIdentity=([^?]+).*Name=([^?]+)", '--group', 2, '--iterator');
+my $REGEX_PLAYER_JOINED_NAME=REGEX->Arguments('--find', "Join succeeded:\\s+(.+)", '--group', 1, '--iterator');
+my $REGEX_PLAYER_LEAVE_ID=REGEX->Arguments('--find', "UNetConnection::Close.*Driver:\\s+GameNetDriver.*UniqueId:\\s+([^,]+),", '--group', 1, '--iterator');
 
 
 open(SIMPLE, '>>', $SIMPLE_LOG_FILE) or die("Unable to open ${SIMPLE_LOG_FILE}");
@@ -35,12 +36,12 @@ sub addUser($$) {
     removeUser($id);
 
     open(ADD_USER, '>>', $CURRENT_USERS_FILE);
-    print ADD_USER "${id} ${name}\n";
+    print ADD_USER "'${id}' '${name}'\n";
     close(ADD_USER);
 }
 
 sub activeUser {
-    my $usersIterator = REGEX->Arguments('--find', "\\s+(.*)\$", '--group', 1, '--file', $CURRENT_USERS_FILE, '--iterator')->Process();
+    my $usersIterator = REGEX->Arguments('--find', "'\\s+'(.*)'\$", '--group', 1, '--file', $CURRENT_USERS_FILE, '--iterator')->Process();
     my $users = '';
     while (my $user = $usersIterator->()) {
         chomp($user);
@@ -51,14 +52,18 @@ sub activeUser {
 
 sub getUser($) {
     my ($id) = @_;
-    $id =~ s/(.)/[$1]/g ;
-    return REGEX->Arguments('--find', "^${id}\\s+(.*)\$", '--group', 1, '--file', $CURRENT_USERS_FILE, '--iterator', '--trim')->Process()->();
+    $id =~ s/(.)/[$1]/g;
+    $id =~ s/(\[\s\])/\\s/g;
+    $id =~ s/(\[\]\])/\[\\\]\]/g;
+    return REGEX->Arguments('--find', "^'${id}'\\s+'(.*)'\$", '--group', 1, '--file', $CURRENT_USERS_FILE, '--iterator', '--trim')->Process()->();
 }
 
 sub removeUser($) {
     my ($id) = @_;
-    $id =~ s/(.)/[$1]/g ;
-    my $usersIterator = REGEX->Arguments('--find', "^${id}\\s+(.*)\$", '--delete', '--file', $CURRENT_USERS_FILE, '--iterator')->Process();
+    $id =~ s/(.)/[$1]/g;
+    $id =~ s/(\[\s\])/\\s/g;
+    $id =~ s/(\[\]\])/\[\\\]\]/g;
+    my $usersIterator = REGEX->Arguments('--find', "^'${id}'\\s+'(.*)'\$", '--delete', '--file', $CURRENT_USERS_FILE, '--iterator')->Process();
     my @users = ();
     while (my $user = $usersIterator->()) {
         chomp($user);
@@ -90,17 +95,23 @@ sub processLine($) {
     $id=$REGEX_PLAYER_LOGIN_ID->Process($line)->();
     if ($id) {
         my $name=$REGEX_PLAYER_LOGIN_NAME->Process($line)->();
-        simpleLog("Player Joined (${name})");
+        simpleLog("Player Connected (${name})");
         addUser($id, $name);
     }
 
-    $name=$REGEX_PLAYER_JOINED->Process($line)->();
-    if ($name) {
-        my $list = activeUser();
-        simpleLog("Player List (${list})");
+    $id=$REGEX_PLAYER_JOIN_ID->Process($line)->();
+    if ($id) {
+        my $name=$REGEX_PLAYER_JOIN_NAME->Process($line)->();
+        simpleLog("Player Joining (${name})");
+        addUser($id, $name);
     }
 
-    $id=$REGEX_PLAYER_LEAVE->Process($line)->();
+    $name=$REGEX_PLAYER_JOINED_NAME->Process($line)->();
+    if ($name) {
+        simpleLog("Player Joined (${name})");
+    }
+
+    $id=$REGEX_PLAYER_LEAVE_ID->Process($line)->();
     if ($id) {
         my $name = getUser($id);
         if ($name) {
@@ -108,7 +119,6 @@ sub processLine($) {
         } else {
             simpleLog("Player Left");
         }
-        removeUser($id);
     }
 }
 
