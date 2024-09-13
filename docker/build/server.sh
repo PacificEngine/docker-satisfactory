@@ -149,6 +149,7 @@ startServer() {
     done
     if [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTING" && -n "${id}" ]]; then
       echo "STARTED" > "${PROCESS_STATUS_FILE}"
+      sleep 10
       while [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTED" ]]; do
         id="$(getServerProcessId)"
         if [[ -z "${id}" ]]; then
