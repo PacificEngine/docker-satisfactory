@@ -9,9 +9,8 @@ USERNAME="$(getProperty "USERNAME")"
 USERGROUP="$(getProperty "USERGROUP")"
 GAME_ID="$(getProperty "GAME_ID")"
 
+IP_SERVER="${IP_SERVER:-$(getProperty "IP_SERVER")}"
 PORT_SERVER="${PORT_SERVER:-$(getProperty "PORT_SERVER")}"
-PORT_BEACON="${PORT_BEACON:-$(getProperty "PORT_BEACON")}"
-PORT_QUERY="${PORT_QUERY:-$(getProperty "PORT_QUERY")}"
 AUTO_UPDATE="${AUTO_UPDATE:-$(getProperty "AUTO_UPDATE")}"
 
 DATE="$(date "+%F-%H:%M:%S")"
@@ -25,7 +24,7 @@ PROCESS_ID_FILE="${INSTALL_DIRECTORY}/process.id"
 PROCESS_STATUS_FILE="${INSTALL_DIRECTORY}/process.status"
 UPDATE_SCRIPT="${INSTALL_DIRECTORY}/update.script"
 START_SCRIPT="${INSTALL_DIRECTORY}/FactoryServer.sh"
-START_ARGUMENTS="-ServerQueryPort=${PORT_QUERY} -BeaconPort=${PORT_BEACON} -Port=${PORT_SERVER} -log -unattended"
+START_ARGUMENTS="-multihome=${IP_SERVER} -Port=${PORT_SERVER} -log -unattended"
 
 runCommandAsLocalUser() {
   su --login "${USERNAME}" --shell /bin/bash --command "${@}"

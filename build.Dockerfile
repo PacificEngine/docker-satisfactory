@@ -37,8 +37,6 @@ RUN chmod 777 -R /tmp && \
   su --login ${USERNAME} --shell /bin/bash --command "steamcmd +runscript '${INSTALL_DIRECTORY}/update.script'"
 
 ARG PORT_SERVER=''
-ARG PORT_BEACON=''
-ARG PORT_QUERY=''
 ARG AUTO_UPDATE=''
 COPY docker /
 RUN cat '/server/properties.template' \
@@ -47,9 +45,8 @@ RUN cat '/server/properties.template' \
     | sed --regexp-extended "s/<%USERNAME%>/${USERNAME//\//\\/}/g" \
     | sed --regexp-extended "s/<%USERGROUP%>/${USERGROUP//\//\\/}/g" \
     | sed --regexp-extended "s/<%GAME_ID%>/${GAME_ID//\//\\/}/g" \
+    | sed --regexp-extended "s/<%IP_SERVER%>/${IP_SERVER:-0.0.0.0}/g" \
     | sed --regexp-extended "s/<%PORT_SERVER%>/${PORT_SERVER:-7777}/g" \
-    | sed --regexp-extended "s/<%PORT_BEACON%>/${PORT_BEACON:-15001}/g" \
-    | sed --regexp-extended "s/<%PORT_QUERY%>/${PORT_QUERY:-15000}/g" \
     | sed --regexp-extended "s/<%AUTO_UPDATE%>/${AUTO_UPDATE:-true}/g" \
     > '/server/properties' && \
   rm '/server/properties.template' && \
