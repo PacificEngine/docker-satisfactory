@@ -10,6 +10,8 @@ USERGROUP="$(getProperty "USERGROUP")"
 GAME_ID="$(getProperty "GAME_ID")"
 
 PORT_SERVER="${PORT_SERVER:-$(getProperty "PORT_SERVER")}"
+PORT_BEACON="${PORT_BEACON:-$(getProperty "PORT_BEACON")}"
+PORT_QUERY="${PORT_QUERY:-$(getProperty "PORT_QUERY")}"
 AUTO_UPDATE="${AUTO_UPDATE:-$(getProperty "AUTO_UPDATE")}"
 
 DATE="$(date "+%F-%H:%M:%S")"
@@ -22,7 +24,7 @@ MAIN_LOG_FILE="${LOG_DIRECTORY}/FactoryGame.log"
 PROCESS_ID_FILE="${INSTALL_DIRECTORY}/process.id"
 PROCESS_STATUS_FILE="${INSTALL_DIRECTORY}/process.status"
 UPDATE_SCRIPT="${INSTALL_DIRECTORY}/update.script"
-START_SCRIPT="${INSTALL_DIRECTORY}/FactoryServer.sh"
+START_SCRIPT="${INSTALL_DIRECTORY}/FactoryServer.sh -ServerQueryPort=${PORT_QUERY} -BeaconPort=${PORT_BEACON} -Port=${PORT_SERVER}"
 
 runCommandAsLocalUser() {
   su --login "${USERNAME}" --shell /bin/bash --command "${@}"
