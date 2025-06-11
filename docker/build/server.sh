@@ -24,7 +24,7 @@ MAIN_LOG_FILE="${LOG_DIRECTORY}/FactoryGame.log"
 PROCESS_ID_FILE="${INSTALL_DIRECTORY}/process.id"
 PROCESS_STATUS_FILE="${INSTALL_DIRECTORY}/process.status"
 UPDATE_SCRIPT="${INSTALL_DIRECTORY}/update.script"
-START_SCRIPT="${INSTALL_DIRECTORY}/FactoryServer.sh -ServerQueryPort=${PORT_QUERY} -BeaconPort=${PORT_BEACON} -Port=${PORT_SERVER}"
+START_SCRIPT="${INSTALL_DIRECTORY}/FactoryServer.sh"
 
 runCommandAsLocalUser() {
   su --login "${USERNAME}" --shell /bin/bash --command "${@}"
@@ -141,7 +141,7 @@ startServer() {
 
   if [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTING" ]]; then
     log "Booting Server"
-    runCommandAsLocalUser "tail --follow=name --retry --lines=0 '${INPUT_FILE}' | '${START_SCRIPT}' -Port=${PORT_SERVER} -log -unattended" &
+    runCommandAsLocalUser "tail --follow=name --retry --lines=0 '${INPUT_FILE}' | '${START_SCRIPT}' -ServerQueryPort=${PORT_QUERY} -BeaconPort=${PORT_BEACON} -Port=${PORT_SERVER} -log -unattended" &
     while [[ "$(cat "${PROCESS_STATUS_FILE}")" == "STARTING" ]]; do
       id="$(getServerProcessId)"
       if [[ -n "${id}" ]]; then
