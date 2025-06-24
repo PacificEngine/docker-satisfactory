@@ -5,8 +5,7 @@ https://hub.docker.com/r/pacificengine/satisfactory
 # Configuration Parameters
 ```shell
 serverport=7777
-beaconport=15000
-queryport=15777
+reliableport=8888
 directory=/home/satisfactory
 username=satisfactory
 service=satisfactory
@@ -28,8 +27,9 @@ chmod 755 -R "${directory}"
 docker run -d --name ${service} \
   --publish ${serverport}:${serverport}/udp \
   --publish ${serverport}:${serverport}/tcp \
-  --publish 8888:8888/tcp \
+  --publish ${reliableport}:${reliableport}/tcp \
   --env PORT_SERVER=${serverport} \
+  --env PORT_RELIABLE=${reliableport} \
   --env AUTO_UPDATE=true \
   --env PUID=$(id -u ${username}) \
   --env PGID=$(id -g ${username}) \
@@ -52,17 +52,23 @@ docker system prune -a
 
 ## Stable
 ```shell
-docker build --file "build.Dockerfile" --tag "satisfactory:latest" --build-arg DISTRIBUTION=ubuntu-20 .
-docker image tag satisfactory:latest pacificengine/satisfactory:ubuntu-20-stable
+DISTRIBUTION=ubuntu-20
+VERSION=1.1.1.1
+docker build --file "build.Dockerfile" --tag "satisfactory:latest" --build-arg DISTRIBUTION=${DISTRIBUTION} .
+docker image tag satisfactory:latest pacificengine/satisfactory:${DISTRIBUTION}-stable
 docker image tag satisfactory:latest pacificengine/satisfactory:stable
-docker image tag satisfactory:latest pacificengine/satisfactory:ubuntu-20-latest
+docker image tag satisfactory:latest pacificengine/satisfactory:${DISTRIBUTION}-latest
 docker image tag satisfactory:latest pacificengine/satisfactory:latest
 docker image tag satisfactory:latest pacificengine/satisfactory:$(git rev-parse --short HEAD)-stable
 docker image tag satisfactory:latest pacificengine/satisfactory:$(git rev-parse --short HEAD)
-docker push pacificengine/satisfactory:ubuntu-20-stable
+docker image tag satisfactory:latest pacificengine/satisfactory:${VERSION}-stable
+docker image tag satisfactory:latest pacificengine/satisfactory:${VERSION}
+docker push pacificengine/satisfactory:${DISTRIBUTION}-stable
 docker push pacificengine/satisfactory:stable
-docker push pacificengine/satisfactory:ubuntu-20-latest
+docker push pacificengine/satisfactory:${DISTRIBUTION}-latest
 docker push pacificengine/satisfactory:latest
 docker push pacificengine/satisfactory:$(git rev-parse --short HEAD)-stable
 docker push pacificengine/satisfactory:$(git rev-parse --short HEAD)
+docker push pacificengine/satisfactory:${VERSION}-stable
+docker push pacificengine/satisfactory:${VERSION}
 ```

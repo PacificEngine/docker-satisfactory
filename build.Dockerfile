@@ -37,6 +37,7 @@ RUN chmod 777 -R /tmp && \
   su --login ${USERNAME} --shell /bin/bash --command "steamcmd +runscript '${INSTALL_DIRECTORY}/update.script'"
 
 ARG PORT_SERVER=''
+ARG PORT_RELIABLE=''
 ARG AUTO_UPDATE=''
 COPY docker /
 RUN cat '/server/properties.template' \
@@ -47,6 +48,7 @@ RUN cat '/server/properties.template' \
     | sed --regexp-extended "s/<%GAME_ID%>/${GAME_ID//\//\\/}/g" \
     | sed --regexp-extended "s/<%IP_SERVER%>/${IP_SERVER:-0.0.0.0}/g" \
     | sed --regexp-extended "s/<%PORT_SERVER%>/${PORT_SERVER:-7777}/g" \
+    | sed --regexp-extended "s/<%PORT_RELIABLE%>/${PORT_RELIABLE:-8888}/g" \
     | sed --regexp-extended "s/<%AUTO_UPDATE%>/${AUTO_UPDATE:-true}/g" \
     > '/server/properties' && \
   rm '/server/properties.template' && \

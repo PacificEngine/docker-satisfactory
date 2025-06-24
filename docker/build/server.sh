@@ -11,6 +11,7 @@ GAME_ID="$(getProperty "GAME_ID")"
 
 IP_SERVER="${IP_SERVER:-$(getProperty "IP_SERVER")}"
 PORT_SERVER="${PORT_SERVER:-$(getProperty "PORT_SERVER")}"
+PORT_RELIABLE="${PORT_RELIABLE:-$(getProperty "PORT_RELIABLE")}"
 AUTO_UPDATE="${AUTO_UPDATE:-$(getProperty "AUTO_UPDATE")}"
 
 DATE="$(date "+%F-%H:%M:%S")"
@@ -24,7 +25,7 @@ PROCESS_ID_FILE="${INSTALL_DIRECTORY}/process.id"
 PROCESS_STATUS_FILE="${INSTALL_DIRECTORY}/process.status"
 UPDATE_SCRIPT="${INSTALL_DIRECTORY}/update.script"
 START_SCRIPT="${INSTALL_DIRECTORY}/FactoryServer.sh"
-START_ARGUMENTS="-multihome=${IP_SERVER} -Port=${PORT_SERVER} -log -unattended"
+START_ARGUMENTS="-multihome=${IP_SERVER} -Port=${PORT_SERVER} -ReliablePort=${PORT_RELIABLE} -log -unattended"
 
 runCommandAsLocalUser() {
   su --login "${USERNAME}" --shell /bin/bash --command "${@}"
