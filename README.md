@@ -52,23 +52,24 @@ docker system prune -a
 
 ## Stable
 ```shell
-DISTRIBUTION=ubuntu-20
-VERSION=1.2.3.0
-docker build --file "build.Dockerfile" --tag "satisfactory:latest" --build-arg DISTRIBUTION=${DISTRIBUTION} .
-docker image tag satisfactory:latest pacificengine/satisfactory:${DISTRIBUTION}-stable
-docker image tag satisfactory:latest pacificengine/satisfactory:stable
-docker image tag satisfactory:latest pacificengine/satisfactory:${DISTRIBUTION}-latest
-docker image tag satisfactory:latest pacificengine/satisfactory:latest
-docker image tag satisfactory:latest pacificengine/satisfactory:$(git rev-parse --short HEAD)-stable
-docker image tag satisfactory:latest pacificengine/satisfactory:$(git rev-parse --short HEAD)
-docker image tag satisfactory:latest pacificengine/satisfactory:${VERSION}-stable
-docker image tag satisfactory:latest pacificengine/satisfactory:${VERSION}
+DISTRIBUTION=ubuntu-24
+GAME_VERSION=1.2.3.0
+GIT_VERSION="$(git rev-parse --short HEAD)"
+docker build --file "build-${DISTRIBUTION}.Dockerfile" --tag "satisfactory:${DISTRIBUTION}" --build-arg DISTRIBUTION=${DISTRIBUTION} .
+docker image tag satisfactory:${DISTRIBUTION} pacificengine/satisfactory:${DISTRIBUTION}-stable
+docker image tag satisfactory:${DISTRIBUTION} pacificengine/satisfactory:stable
+docker image tag satisfactory:${DISTRIBUTION} pacificengine/satisfactory:${DISTRIBUTION}-latest
+docker image tag satisfactory:${DISTRIBUTION} pacificengine/satisfactory:latest
+docker image tag satisfactory:${DISTRIBUTION} pacificengine/satisfactory:${GIT_VERSION}-stable
+docker image tag satisfactory:${DISTRIBUTION} pacificengine/satisfactory:${GIT_VERSION}
+docker image tag satisfactory:${DISTRIBUTION} pacificengine/satisfactory:${GAME_VERSION}-stable
+docker image tag satisfactory:${DISTRIBUTION} pacificengine/satisfactory:${GAME_VERSION}
 docker push pacificengine/satisfactory:${DISTRIBUTION}-stable
 docker push pacificengine/satisfactory:stable
 docker push pacificengine/satisfactory:${DISTRIBUTION}-latest
 docker push pacificengine/satisfactory:latest
-docker push pacificengine/satisfactory:$(git rev-parse --short HEAD)-stable
-docker push pacificengine/satisfactory:$(git rev-parse --short HEAD)
-docker push pacificengine/satisfactory:${VERSION}-stable
-docker push pacificengine/satisfactory:${VERSION}
+docker push pacificengine/satisfactory:${GIT_VERSION}-stable
+docker push pacificengine/satisfactory:${GIT_VERSION}
+docker push pacificengine/satisfactory:${GAME_VERSION}-stable
+docker push pacificengine/satisfactory:${GAME_VERSION}
 ```
