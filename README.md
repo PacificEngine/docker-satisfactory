@@ -53,7 +53,7 @@ docker system prune -a
 ## Stable
 ```shell
 DISTRIBUTION=ubuntu-20
-VERSION=1.1.1.1
+VERSION=1.2.3.0
 docker build --file "build.Dockerfile" --tag "satisfactory:latest" --build-arg DISTRIBUTION=${DISTRIBUTION} .
 docker image tag satisfactory:latest pacificengine/satisfactory:${DISTRIBUTION}-stable
 docker image tag satisfactory:latest pacificengine/satisfactory:stable
